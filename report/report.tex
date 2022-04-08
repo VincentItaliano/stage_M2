@@ -1,0 +1,129 @@
+\documentclass[10pt]{amsart}
+
+
+\usepackage{amssymb}
+\usepackage{epsfig}  		% For postscript
+\usepackage{showkeys}
+
+\usepackage{booktabs}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+\usepackage[authoryear,round]{natbib}
+\setlength\bibhang{0pt} % optional
+\setlength\bibsep{1ex}  % optional
+
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+
+\newtheorem{conj}[thm]{Conjecture} 
+
+\theoremstyle{definition}
+\newtheorem{definition}[thm]{Definition}
+\newtheorem{example}[thm]{Example}
+\newtheorem{note}[thm]{Note}
+\theoremstyle{remark}
+\newtheorem{remark}[thm]{Remark}
+\numberwithin{equation}{section}
+
+\begin{document}
+
+\title{Physics informed Neural networks for Burger's equation}
+\author{Vincent Italiano}
+
+\begin{abstract}
+Great stuff.
+\end{abstract}
+
+
+\maketitle
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Physics-Informed Neural networks}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In this section, we present the PINN's framework.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Technical stuff}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Numerical Results}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In this section, we show the performance of the importance sampling method using residual and entropy compared
+to the usual method.\\
+
+The training is performed using TensorFlow on a NVIDIA Tesla V100-PCIE-16GB GPU. We use Adam optimization algorithm
+to find the optimal neural network parameters with a wisely choosen learning rate.
+
+
+\subsection{Importance sampling}
+
+Here we show the performance of the importance sampling method using residual and entropy compared
+to the usual SGD method.
+
+For each of the simulations we used the following hyperparameters : 
+Batch size is set to 5,000, the learning rate $\eta$ is initially set to 
+$1.10^{-4}$ and follow an exponential decay of factor $0.98$ every $200$ step.
+Finnaly, we train for 20,000 iterations.
+
+
+
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{c c c c }
+        \toprule
+         & uniform sampling & IS using residual & IS using entropy\\
+        \midrule
+        10,000 points  & $4.84^{-2}$ & $1.84^{-3}$ & $2.95^{-2}$\\
+        20,000 points  & $5.91^{-2}$ & $1.21^{-2}$ & $1.77^{-2}$\\
+        40,000 points  & $5.77^{-2}$ & $5.03^{-2}$ & $1.36^{-2}$\\
+        100,000 points & $6.69^{-2}$ & $4.72^{-2}$ & $2.21^{-1}$\\
+        \bottomrule\\
+    \end{tabular}
+    \caption{Best loss reach during training}
+\end{table}
+
+\subsection{Multiple viscosities}
+
+In this section, we add the viscosity as a parameters of the Burger's equation 
+and trained a PINN over multiple viscosities.\\
+
+For each of the simulations we used the following hyperparameters : 
+Batch size is set to 5,000, the learning rate $\eta$ is initially set to 
+$1.10^{-3}$ and follow an exponential decay of factor $0.97$ every $200$ step.
+Finnaly, we train for 60,000 iterations.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{c  c c }
+        \toprule
+          & residual & entropy\\
+        \midrule
+        30,000 points &  $2.04^{-5}$ & $1.82^{-4}$\\
+        60,000 points &  $3.46^{-5}$ & $5.29^{-4}$\\
+        \bottomrule\\
+    \end{tabular}
+    \caption{Best loss reach during training}
+\end{table}
+
+\clearpage
+\nocite{*}
+\bibliography{report}
+\bibliographystyle{apalike}
+
+
+\end{document}
