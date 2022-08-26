@@ -1,7 +1,13 @@
 import tensorflow as tf
 import numpy as np
-from scipy.special import j0, j1
+from scipy.special import j0, j1 #bessel functions
 import requests
+
+# Manage tensorflow memory
+tf.get_logger().setLevel('ERROR')
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+  tf.config.experimental.set_memory_growth(gpu, True)
 
 # Path to data and saved weights
 WEIGHT_PATH = '../saved_models/'
@@ -16,7 +22,7 @@ viscosity = tf.constant(3e-3, dtype=DTYPE)
 
 # Set boundary
 tmin = 0.
-tmax = 5.
+tmax = 6.01
 xmin = -3.
 xmax = 3.
 ymin = -3. 
