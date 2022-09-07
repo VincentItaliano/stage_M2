@@ -1,17 +1,13 @@
 # MHD 
 
-## data description
+## Organization  
 
-|  Filename |  description   | viscosity |
-|    ---    |      ---       |    ---    |
-|    `tiltC*.vtk` | current J | 3e-3 |
-|    `tiltO*.vtk` | vorticity J | 3e-3 |
-|    `tiltphi*.vtk` |stream phi | 3e-3 |
-|    `tiltpsi*.vtk` |potential psi | 3e-3 |
+|  Directory |  Uses |
+|    ---    |      ---    |
+| `data` | Exact solution's data |
+| `figures` | contrain generated figures |
+| `notebooks` | notebooks|
+| `saved_models` | some saved models |
+| `sources` | sources of the code|
 
-
-##  saved models
-
-|  Filename |  Network size  | viscosity |
-|    ---    |      ---       |    ---    |
-
+The file `run.sh` run a notebook in command line

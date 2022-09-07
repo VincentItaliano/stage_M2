@@ -821,7 +821,6 @@ class VinciSolver():
         return ax
 
 
-
 class vincisolver2():
     def __init__(self, model_hydro, model_magneto, batch_size):
 

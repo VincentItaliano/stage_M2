@@ -5,11 +5,6 @@ import meshio
 from .parameters import *
 
 
-# Lower bounds
-lb = tf.constant([tmin, xmin, ymin], dtype=DTYPE)
-# Upper bounds
-ub = tf.constant([tmax, xmax, ymax], dtype=DTYPE)
-
 class data_generator:
 
     def __init__(self, lb, ub):

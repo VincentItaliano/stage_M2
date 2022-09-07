@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 from scipy.special import j0, j1 #bessel functions
-import requests
 
 # Manage tensorflow memory
 tf.get_logger().setLevel('ERROR')
@@ -19,14 +18,6 @@ DTYPE='float32'
 tf.keras.backend.set_floatx(DTYPE)
 
 viscosity = tf.constant(3e-3, dtype=DTYPE)
-
-# Set boundary
-tmin = 0.
-tmax = 6.01
-xmin = -3.
-xmax = 3.
-ymin = -3. 
-ymax = 3.
 
 #Define initial condition
 def fun_omega_0(x, y):
@@ -49,10 +40,3 @@ def fun_psi_0(x,y):
     r = np.sqrt(x**2 + y**2)
     psi_0 = np.where(r <= 1., alpha*j1(k*r)*y/r, (1/r-r)*y/r)
     return psi_0
-
-def alert(message):
-    bot_token = '5169497350:AAHiAyn6D8q9QDoRzTC8HnQU8kYJ-M6xoDg'
-    bot_chatID = '1061558745'
-    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text='
-    send_text += 'Les calculs sont finito pipo : ' + message
-    requests.get(send_text)
