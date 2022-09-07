@@ -18,9 +18,11 @@ class PINNSolver():
         self.best_loss = 1.0
         self.count_since_best_loss = 0
 
+        # file to store the best weights
         self.weight_filename = weight_filename
     
     def get_r(self, X):
+        """ Compute pde residual """
         
         t, x = X[:,0:1], X[:,1:2]
         
@@ -42,6 +44,7 @@ class PINNSolver():
         return u_t + u*u_x  - viscosity*u_xx
     
     def all_losses(self, X_r, X_data, u_data):
+        """ returns each terms in the loss """
         
         # Compute phi_r
         r = self.get_r(X_r)
@@ -58,6 +61,7 @@ class PINNSolver():
         return phi_r, phi_0, phi_b
     
     def loss_fn(self, X_r, X_data, u_data):
+        """ Loss function """
         
         phi_r, phi_0, phi_b = self.all_losses(X_r, X_data, u_data)
 
@@ -82,6 +86,7 @@ class PINNSolver():
     def solve_with_TFoptimizer(self, optimizer, X_r, X_data, u_data, alpha):
         """This method performs a gradient descent type optimization."""
         
+        # alpha is the ration of uniformly sampled points (alpha!=1 to use preference sampling)
         self.nb_uniform  = int(alpha * self.batch_size)
         self.nb_residual = int((1-alpha) * self.batch_size)
         
@@ -96,7 +101,7 @@ class PINNSolver():
         num_epochs = 20_000
         for epoch in range(num_epochs):
                         
-            # calcul de q_i 
+            # compute q_i
             if alpha == 1.:
                 J_rho = self.get_r(X_r) 
                 sum_J_rho = tf.reduce_sum(J_rho**2)
@@ -107,103 +112,22 @@ class PINNSolver():
         
             for step in range(1):
 
-                # tire les points 
+                # sample points
                 indices_uniform  = np.random.choice(len(X_r), size=self.nb_uniform, replace=False)
                 indices_residual = np.random.choice(len(X_r), size=self.nb_residual, replace=False, p=q)
                 indices = np.concatenate((indices_uniform, indices_residual), axis=None)
                 batch = tf.gather(X_r, indices)
 
-                # descente de gradient
+                # gradient descent
                 loss = train_step(batch)
 
             self.phi_r, self.phi_0, self.phi_b = self.all_losses(X_r, X_data, u_data)
             self.current_loss = self.phi_r + self.phi_0 + self.phi_b
             self.callback()
             
+        # retrieve best weights at the end of the training
         self.model.load_weights(WEIGHT_PATH + self.weight_filename)
         
-    def solve_with_ScipyOptimizer(self, X_r, X_data, u_data, method='L-BFGS-B'):
-        
-        def get_weight_tensor():
-            """Function to return current variables of the model
-            as 1d tensor as well as corresponding shapes as lists."""
-            
-            weight_list = []
-            shape_list = []
-            
-            # Loop over all variables, i.e. weight matrices, bias vectors and unknown parameters
-            for v in self.model.variables:
-                shape_list.append(v.shape)
-                weight_list.extend(v.numpy().flatten())
-                
-            weight_list = tf.convert_to_tensor(weight_list)
-            return weight_list, shape_list
-
-        x0, shape_list = get_weight_tensor()
-        
-        def set_weight_tensor(weight_list):
-            """Function which sets list of weights
-            to variables in the model."""
-            idx = 0
-            for v in self.model.variables:
-                vs = v.shape
-                
-                # Weight matrices
-                if len(vs) == 2:  
-                    sw = vs[0]*vs[1]
-                    new_val = tf.reshape(weight_list[idx:idx+sw],(vs[0],vs[1]))
-                    idx += sw
-                
-                # Bias vectors
-                elif len(vs) == 1:
-                    new_val = weight_list[idx:idx+vs[0]]
-                    idx += vs[0]
-                    
-                # Variables (in case of parameter identification setting)
-                elif len(vs) == 0:
-                    new_val = weight_list[idx]
-                    idx += 1
-                    
-                # Assign variables (Casting necessary since scipy requires float64 type)
-                v.assign(tf.cast(new_val, DTYPE))
-        
-        def get_loss_and_grad(w):
-            """Function that provides current loss and gradient
-            w.r.t the trainable variables as vector. This is mandatory
-            for the LBFGS minimizer from scipy."""
-            
-            # Update weights in model
-            set_weight_tensor(w)
-            # Determine value of \phi and gradient w.r.t. \theta at w
-            loss, grad = self.get_grad(X_r, X_data, u_data)
-            
-            # Store current loss for callback function            
-            loss = loss.numpy().astype(np.float64)
-            self.current_loss = loss            
-            
-            # Flatten gradient
-            grad_flat = []
-            for g in grad:
-                grad_flat.extend(g.numpy().flatten())
-            
-            # Gradient list to array
-            grad_flat = np.array(grad_flat,dtype=np.float64)
-            
-            # Return value and gradient of \phi as tuple
-            return loss, grad_flat
-        
-        
-        return scipy.optimize.minimize(fun=get_loss_and_grad,
-                                       x0=x0,
-                                       jac=True,
-                                       method=method,
-                                       callback=self.callback,
-                                       options={'maxiter': 3000,
-                                                'maxfun': 50000,
-                                                'maxcor': 50,
-                                                'maxls': 50,
-                                                'ftol': 1.0*np.finfo(float).eps})
-
     def callback(self, xr=None):
         self.count_since_best_loss+=1
         
@@ -250,9 +174,11 @@ class PINNSolver2():
         self.best_loss = 1.0
         self.count_since_best_loss = 0
 
+        # file to store the best weights
         self.weight_filename = weight_filename
     
     def get_r(self, X):
+        """ Compute pde residual """
         
         t, x, nu = X[:,0:1], X[:,1:2], X[:,2:3]
         
@@ -274,6 +200,7 @@ class PINNSolver2():
         return u_t + u*u_x  - nu*u_xx
     
     def all_losses(self, X_r, X_data, u_data):
+        """ returns each terms in the loss """
         
         # Compute phi_r
         r = self.get_r(X_r)
@@ -290,6 +217,7 @@ class PINNSolver2():
         return phi_r, phi_0, phi_b
     
     def loss_fn(self, X_r, X_data, u_data):
+        """ Loss function """
         
         phi_r, phi_0, phi_b = self.all_losses(X_r, X_data, u_data)
 
@@ -328,7 +256,7 @@ class PINNSolver2():
         num_epochs = 20_000
         for epoch in range(num_epochs):
                         
-            # calcul de q_i 
+            # compute q_i 
             if alpha == 1.:
                 J_rho = self.get_r(X_r) 
                 sum_J_rho = tf.reduce_sum(J_rho**2)
@@ -339,13 +267,13 @@ class PINNSolver2():
         
             for step in range(1):
 
-                # tire les points 
+                # sample points 
                 indices_uniform  = np.random.choice(len(X_r), size=self.nb_uniform, replace=False)
                 indices_residual = np.random.choice(len(X_r), size=self.nb_residual, replace=False, p=q)
                 indices = np.concatenate((indices_uniform, indices_residual), axis=None)
                 batch = tf.gather(X_r, indices)
 
-                # descente de gradient
+                # gradient descent
                 loss = train_step(batch)
 
             self.phi_r, self.phi_0, self.phi_b = self.all_losses(X_r, X_data, u_data)
@@ -354,88 +282,6 @@ class PINNSolver2():
             
         self.model.load_weights(WEIGHT_PATH + self.weight_filename)
         
-    def solve_with_ScipyOptimizer(self, X_r, X_data, u_data, method='L-BFGS-B'):
-        
-        def get_weight_tensor():
-            """Function to return current variables of the model
-            as 1d tensor as well as corresponding shapes as lists."""
-            
-            weight_list = []
-            shape_list = []
-            
-            # Loop over all variables, i.e. weight matrices, bias vectors and unknown parameters
-            for v in self.model.variables:
-                shape_list.append(v.shape)
-                weight_list.extend(v.numpy().flatten())
-                
-            weight_list = tf.convert_to_tensor(weight_list)
-            return weight_list, shape_list
-
-        x0, shape_list = get_weight_tensor()
-        
-        def set_weight_tensor(weight_list):
-            """Function which sets list of weights
-            to variables in the model."""
-            idx = 0
-            for v in self.model.variables:
-                vs = v.shape
-                
-                # Weight matrices
-                if len(vs) == 2:  
-                    sw = vs[0]*vs[1]
-                    new_val = tf.reshape(weight_list[idx:idx+sw],(vs[0],vs[1]))
-                    idx += sw
-                
-                # Bias vectors
-                elif len(vs) == 1:
-                    new_val = weight_list[idx:idx+vs[0]]
-                    idx += vs[0]
-                    
-                # Variables (in case of parameter identification setting)
-                elif len(vs) == 0:
-                    new_val = weight_list[idx]
-                    idx += 1
-                    
-                # Assign variables (Casting necessary since scipy requires float64 type)
-                v.assign(tf.cast(new_val, DTYPE))
-        
-        def get_loss_and_grad(w):
-            """Function that provides current loss and gradient
-            w.r.t the trainable variables as vector. This is mandatory
-            for the LBFGS minimizer from scipy."""
-            
-            # Update weights in model
-            set_weight_tensor(w)
-            # Determine value of \phi and gradient w.r.t. \theta at w
-            loss, grad = self.get_grad(X_r, X_data, u_data)
-            
-            # Store current loss for callback function            
-            loss = loss.numpy().astype(np.float64)
-            self.current_loss = loss            
-            
-            # Flatten gradient
-            grad_flat = []
-            for g in grad:
-                grad_flat.extend(g.numpy().flatten())
-            
-            # Gradient list to array
-            grad_flat = np.array(grad_flat,dtype=np.float64)
-            
-            # Return value and gradient of \phi as tuple
-            return loss, grad_flat
-        
-        
-        return scipy.optimize.minimize(fun=get_loss_and_grad,
-                                       x0=x0,
-                                       jac=True,
-                                       method=method,
-                                       callback=self.callback,
-                                       options={'maxiter': 3000,
-                                                'maxfun': 50000,
-                                                'maxcor': 50,
-                                                'maxls': 50,
-                                                'ftol': 1.0*np.finfo(float).eps})
-
     def callback(self, xr=None):
         self.count_since_best_loss+=1
         

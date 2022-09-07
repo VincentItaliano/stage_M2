@@ -2,12 +2,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from .parameters import *
 
-# Lower bounds
-lb = tf.constant([tmin, xmin, numin], dtype=DTYPE)
-# Upper bounds
-ub = tf.constant([tmax, xmax, numax], dtype=DTYPE)
-
-def gen_train_data(N_r = 10_000, N_0 = 10_000, N_b = 10_000):
+def gen_train_data(lb, ub, nu=False, N_r = 10_000, N_0 = 10_000, N_b = 10_000):
 
     # Set random seed for reproducible results
     tf.random.set_seed(0)
@@ -15,16 +10,22 @@ def gen_train_data(N_r = 10_000, N_0 = 10_000, N_b = 10_000):
     # Draw uniformly sampled collocation points
     t_r = tf.random.uniform((N_r,1), lb[0], ub[0], dtype=DTYPE)
     x_r = tf.random.uniform((N_r,1), lb[1], ub[1], dtype=DTYPE)
-    nu_r = tf.random.uniform((N_r,1), lb[2], ub[2], dtype=DTYPE)
 
-    X_r = tf.concat([t_r, x_r, nu_r], axis=1)
+    if nu:
+        nu_r = tf.random.uniform((N_r,1), lb[2], ub[2], dtype=DTYPE)
+        X_r = tf.concat([t_r, x_r, nu_r], axis=1)
+    else:
+        X_r = tf.concat([t_r, x_r], axis=1)
 
     # Draw uniform sample points for initial boundary data
     t_0 = tf.ones((N_0,1), dtype=DTYPE)*lb[0]
     x_0 = tf.random.uniform((N_0,1), lb[1], ub[1], dtype=DTYPE)
-    nu_0 = tf.random.uniform((N_0,1), lb[2], ub[2], dtype=DTYPE)
 
-    X_0 = tf.concat([t_0, x_0, nu_0], axis=1)
+    if nu:
+        nu_0 = tf.random.uniform((N_0,1), lb[2], ub[2], dtype=DTYPE)
+        X_0 = tf.concat([t_0, x_0, nu_0], axis=1)
+    else:
+        X_0 = tf.concat([t_0, x_0], axis=1)
 
     # Evaluate intitial condition at (x_0)
     u_0 = fun_u_0(x_0)
@@ -32,9 +33,12 @@ def gen_train_data(N_r = 10_000, N_0 = 10_000, N_b = 10_000):
     # Boundary data
     t_b = tf.random.uniform((N_b,1), lb[0], ub[0], dtype=DTYPE)
     x_b = lb[1] + (ub[1] - lb[1]) * tf.keras.backend.random_bernoulli((N_b,1), 0.5, dtype=DTYPE)
-    nu_b = tf.random.uniform((N_b,1), lb[2], ub[2], dtype=DTYPE)
 
-    X_b = tf.concat([t_b, x_b, nu_b], axis=1)
+    if nu:
+        nu_b = tf.random.uniform((N_b,1), lb[2], ub[2], dtype=DTYPE)
+        X_b = tf.concat([t_b, x_b, nu_b], axis=1)
+    else:
+        X_b = tf.concat([t_b, x_b], axis=1)
 
     # Evaluate boundary condition at (t_b,x_b)
     u_b = fun_u_b(t_b, x_b)
