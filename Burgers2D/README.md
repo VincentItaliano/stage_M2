@@ -2,12 +2,17 @@
 
 ## Description
 
-Solve for the PDE $$u_t + uu_x + u_y - \nu(u_{xx} + u_{yy}) $$
+Solve for the PDE 
+$$u_t + uu_x + u_y - \nu(u_{xx} + u_{yy}) $$
 
-##  saved models
+## Organization  
 
-|  Filename |  Network size  | viscosity |
-|    ---    |      ---       |    ---    |
-| best_weight_hubert  | 8x64  | 1e-3 |
-|  best_weight-hubert.h5  | 8x150  | 1e-3 |
-|  best_weight-hubert2.h5  |  8x150 | 1e-3 |
+|  Directory |  Uses |
+|    ---    |      ---    |
+| `data` | Exact solution's data |
+| `figures` | contrain generated figures |
+| `notebooks` | notebooks|
+| `saved_models` | some saved models |
+| `sources` | sources of the code|
+
+The file `run.sh` run a notebook in command line

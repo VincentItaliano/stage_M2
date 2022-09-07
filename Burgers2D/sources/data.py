@@ -1,12 +1,7 @@
 import tensorflow as tf
 from .parameters import *
 
-# Lower bounds
-lb = tf.constant([tmin, xmin, ymin], dtype=DTYPE)
-# Upper bounds
-ub = tf.constant([tmax, xmax, ymax], dtype=DTYPE)
-
-def gen_train_data(N_r = 10_000, N_0 = 10_000, N_b = 10_000):
+def gen_train_data(lb, ub, N_r = 10_000, N_0 = 10_000, N_b = 10_000):
 
     # Set random seed for reproducible results
     tf.random.set_seed(0)
